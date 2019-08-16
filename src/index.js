@@ -2,9 +2,22 @@ import React from 'react';
 import { render } from 'react-dom'
 import App from './App';
 import { ApolloProvider } from 'react-apollo'
-import ApolloClient from 'apollo-boost'
+import ApolloClient, { InMemoryCache } from 'apollo-boost'
+import { persistCache } from 'apollo-cache-persist'
+
+const cache = new InMemoryCache()
+persistCache({
+  cache,
+  storage: localStorage
+})
+
+if (localStorage['apollo-cache-persist']) {
+  let cacheData = JSON.parse(localStorage['apollo-cache-persist'])
+  cache.restore(cacheData)
+}
 
 const client = new ApolloClient({
+  cache,
   uri: 'http://localhost:4000/graphql',
   request: operation => {
     operation.setContext(context => ({
@@ -15,6 +28,20 @@ const client = new ApolloClient({
     }))
   }
 })
+
+/* cache.writeQuery({
+  query: ROOT_QUERY,
+  data: {
+    me: null,
+    allUsers: [],
+    totalUsers: 0
+  }
+})
+
+let { totalUsers, allUsers, me } = cache.readQuery({ query: ROOT_QUERY})
+console.log('totalUsers', totalUsers)
+console.log('allUsers', allUsers)
+console.log('me', me) */
 
 render(
   <ApolloProvider client={client}>

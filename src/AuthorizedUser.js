@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
-import { Mutation, Query } from 'react-apollo'
+import { Mutation, Query, withApollo } from 'react-apollo'
 import { gql } from 'apollo-boost'
 import { ROOT_QUERY } from './App'
+import {compose} from "recompose"
 
 const GITHUB_AUTH_MUTATION = gql`
   mutation githubAuth($code: String){
@@ -23,8 +24,8 @@ const Me =({ logout, requestCode, signinIn }) =>
     }
   </Query>
 
-  const CurrentUser = ({ name, avatar, logout }) => 
-    <div>
+const CurrentUser = ({ name, avatar, logout }) => 
+<div>
       <img src={avatar} width={48} height={48} alt="" />
       <h1>{name}</h1>
       <button onClick={logout}>logout</button>
@@ -32,7 +33,7 @@ const Me =({ logout, requestCode, signinIn }) =>
 
 class AuthorizedUser extends Component {
   state = { signinIn: false }
-
+  
   authorizationComplete = (cache, { data }) => {
     localStorage.setItem('token', data.githubAuth.token)
     this.props.history.replace('/')
@@ -43,14 +44,12 @@ class AuthorizedUser extends Component {
     if(window.location.search.match(/code=/)) {
       this.setState({ signinIn: true })
       const code = window.location.search.replace("?code=", "")
-      console.log('111111111111111111111', code)
       this.githubAuth({ variables: {code} })
     }
   }
 
   requestCode(){
     var clientID = 'f11f25343ebc49580244'
-    //console.log(window.location)
     window.location = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=user`
   }
 
@@ -66,7 +65,13 @@ class AuthorizedUser extends Component {
           return (
             <Me signinIn={this.state.signinIn}
               requestCode={this.requestCode}
-              logout={() => localStorage.removeItem('token')} />
+              logout={() => {
+                localStorage.removeItem('token')
+                let data = this.props.client.readQuery({ query: ROOT_QUERY })
+                data.me = null
+                this.props.client.writeQuery({ query: ROOT_QUERY, data })
+                }
+              } />
             )
           }
         }
@@ -75,4 +80,4 @@ class AuthorizedUser extends Component {
   }
 }
 
-export default withRouter(AuthorizedUser)
+export default compose(withApollo, withRouter)(AuthorizedUser)
