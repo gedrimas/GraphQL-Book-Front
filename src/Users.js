@@ -26,9 +26,11 @@ const Users = () =>
   <Query query={ROOT_QUERY} fetchPolicy='cache-and-network'>
     {({data, loading, refetch}) => loading ? 
       <p>Loading users ...</p> : 
-      <UserList count={data.totalUsers}
-      users={data.allUsers}
-      refetchUsers={refetch} />
+      <UserList
+        count={data.totalUsers}
+        users={data.allUsers}
+        refetchUsers={refetch} 
+      />
     }  
   </Query>
 
@@ -40,7 +42,7 @@ const Users = () =>
         mutation={ADD_FAKE_USERS_MUTATION}
         variables={{count: 1}}
         update={updateUserCache}
-        >
+      >
         {
           addFakeUsers => 
             <button onClick={addFakeUsers}>Add Fake Users</button>
@@ -49,9 +51,11 @@ const Users = () =>
       <ul>
         {
           users.map(user => 
-          <UserListItem key={user.githubLogin}
-            name={user.name}
-            avatar={user.avatar} />  
+            <UserListItem 
+              key={user.githubLogin}
+              name={user.name}
+              avatar={user.avatar} 
+            />  
           )
         }
       </ul>
