@@ -1,51 +1,66 @@
-import React from 'react';
+import React from 'react'
 import { render } from 'react-dom'
-import App from './App';
+import App from './App'
 import { ApolloProvider } from 'react-apollo'
-import ApolloClient, { InMemoryCache } from 'apollo-boost'
+import { 
+    InMemoryCache, 
+    ApolloLink,
+    ApolloClient,
+    split
+} from 'apollo-boost'
+import { WebSocketLink } from 'apollo-link-ws'
+import { getMainDefinition } from 'apollo-utilities'
 import { persistCache } from 'apollo-cache-persist'
+import { createUploadLink } from 'apollo-upload-client'
 
 const cache = new InMemoryCache()
 persistCache({
-  cache,
-  storage: localStorage
+    cache,
+    storage: localStorage
 })
 
 if (localStorage['apollo-cache-persist']) {
-  let cacheData = JSON.parse(localStorage['apollo-cache-persist'])
-  cache.restore(cacheData)
+    let cacheData = JSON.parse(localStorage['apollo-cache-persist'])
+    cache.restore(cacheData)
 }
 
-const client = new ApolloClient({
-  cache,
-  uri: 'http://localhost:4000/graphql',
-  request: operation => {
+
+const httpLink = createUploadLink({ uri: 'http://localhost:4000/graphql' })
+const authLink = new ApolloLink((operation, forward) => {
     operation.setContext(context => ({
-      headers: {
-        ...context.headers,
-        authorization: localStorage.getItem('token')
-      }
+        headers: {
+            ...context.headers,
+            authorization: localStorage.getItem('token')
+        }
     }))
-  }
+    return forward(operation)
 })
 
-/* cache.writeQuery({
-  query: ROOT_QUERY,
-  data: {
-    me: null,
-    allUsers: [],
-    totalUsers: 0
-  }
-})
+const httpAuthLink = authLink.concat(httpLink)
 
-let { totalUsers, allUsers, me } = cache.readQuery({ query: ROOT_QUERY})
-console.log('totalUsers', totalUsers)
-console.log('allUsers', allUsers)
-console.log('me', me) */
+/* const wsLink = new WebSocketLink({
+    uri: `ws://localhost:4000/graphql`,
+    options: { reconnect: true }
+  }) */
+  
+/* const link = split(
+    ({ query }) => {
+        const { kind, operation } = getMainDefinition(query)
+        return kind === 'OperationDefinition' && operation === 'subscription'
+    }, 
+    wsLink,
+    httpAuthLink
+) */
+
+const link = httpAuthLink
+const client = new ApolloClient({ 
+    cache,
+    link
+})
 
 render(
-  <ApolloProvider client={client}>
-    <App />
-  </ApolloProvider>,
-  document.getElementById('root')
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>, 
+    document.getElementById('root')
 )

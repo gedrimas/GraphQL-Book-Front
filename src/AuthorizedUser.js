@@ -1,28 +1,27 @@
 import React, { Component } from 'react'
-import { withRouter } from 'react-router-dom'
+import { withRouter, NavLink } from 'react-router-dom'
 import { Mutation, Query, withApollo } from 'react-apollo'
 import { gql } from 'apollo-boost'
 import { ROOT_QUERY } from './App'
 import {compose} from "recompose"
 
 const GITHUB_AUTH_MUTATION = gql`
-  mutation githubAuth($code: String){
+  mutation githubAuth($code: String!){
     githubAuth(code:$code) { token }
   }
 `
 const Me =({ logout, requestCode, signinIn }) => 
-  <Query query={ROOT_QUERY}>
-    {
-      ({ loading, data }) => data.me ?
-      <CurrentUser {...data.me} logout={logout} /> :
-      loading ? <p>loading...</p> :
-      <button 
-        onClick={requestCode}
-        disabled={signinIn}>
-          Sign in with GitHub
-        </button> 
-    }
-  </Query>
+<Query query={ROOT_QUERY} fetchPolicy="cache-only">
+        {({ loading, data }) => data.me ?
+            <CurrentUser {...data.me} logout={logout} /> :
+            loading ?
+                <p>loading... </p> :
+                <button onClick={requestCode} 
+                    disabled={signinIn}>
+                    Sign In with Github
+                </button> 
+        }
+    </Query> 
 
 const CurrentUser = ({ name, avatar, logout }) => 
 <div>

@@ -2,6 +2,7 @@ import React from 'react'
 import { Query, Mutation } from 'react-apollo'
 import { gql } from 'apollo-boost'
 import { ROOT_QUERY } from './App'
+import PostPhoto from './PostPhoto'
 
 const ADD_FAKE_USERS_MUTATION = gql`
   mutation addFakeUsers($count:Int!) {
@@ -36,6 +37,7 @@ const Users = () =>
 
   const UserList = ({ count, users, refetchUsers }) => 
     <div>
+      <PostPhoto />
       <p>{count} Users</p>
       <button onClick={() => refetchUsers()}>Refetch</button>
       <Mutation 
